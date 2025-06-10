@@ -96,4 +96,7 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 .ruff_cache/
-.mypy_cache/ 
+.mypy_cache/
+
+# Frontend Node modules
+radar-spacing-app/frontend/node_modules/ 
