@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import { 
   OrbitControls, 
   PerspectiveCamera, 
@@ -21,7 +21,6 @@ interface RadarVisualizationProps {
 }
 
 const AntennaElement = ({ position, index, actualPos }: { position: [number, number, number], index: number, actualPos: number }) => {
-  const meshRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   
   return (

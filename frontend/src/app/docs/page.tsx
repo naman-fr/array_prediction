@@ -33,7 +33,7 @@ export default function Documentation() {
           Technical Documentation
         </h2>
         <p className="text-slate-400 mt-2 text-lg">
-          Understanding the physics and mathematics behind Sentinel AI's optimization engine.
+          Understanding the physics and mathematics behind Sentinel AI&apos;s optimization engine.
         </p>
       </header>
 
@@ -58,7 +58,7 @@ export default function Documentation() {
       <div className="bg-blue-600/5 border border-blue-500/20 rounded-2xl p-8 max-w-4xl">
         <h4 className="text-sm font-bold text-blue-400 uppercase tracking-widest mb-4">Implementation Note</h4>
         <p className="text-slate-300 italic">
-          "The integration of ReAct agents allows the system to bridge the gap between high-level human requirements ('I need better accuracy') and the low-level physical parameters (d1, d2, d3) dictated by the CRT boundary conditions."
+          &quot;The integration of ReAct agents allows the system to bridge the gap between high-level human requirements (&apos;I need better accuracy&apos;) and the low-level physical parameters (d1, d2, d3) dictated by the CRT boundary conditions.&quot;
         </p>
       </div>
     </div>

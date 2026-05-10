@@ -9,8 +9,13 @@ interface Message {
   content: string;
 }
 
+interface PredictionData {
+  positions: number[];
+  spacings: number[];
+}
+
 interface AgentChatProps {
-  onResultsUpdate: (data: any) => void;
+  onResultsUpdate: (data: PredictionData) => void;
 }
 
 export default function AgentChat({ onResultsUpdate }: AgentChatProps) {
@@ -19,12 +24,9 @@ export default function AgentChat({ onResultsUpdate }: AgentChatProps) {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string>('');
-
-  useEffect(() => {
-    // Generate a unique session ID for stateful agentic memory
-    setSessionId(Math.random().toString(36).substring(2, 15));
-  }, []);
+  const [sessionId] = useState<string>(() => 
+    typeof window !== 'undefined' ? Math.random().toString(36).substring(2, 15) : ''
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -54,9 +56,9 @@ export default function AgentChat({ onResultsUpdate }: AgentChatProps) {
       setMessages(prev => [...prev, { role: 'agent', content: response.data.reply }]);
       
       if (response.data.data) {
-        onResultsUpdate(response.data.data);
+        onResultsUpdate(response.data.data as PredictionData);
       }
-    } catch (error) {
+    } catch (_error) {
       setMessages(prev => [...prev, { role: 'agent', content: 'Agent: Error connecting to the server.' }]);
     } finally {
       setIsLoading(false);

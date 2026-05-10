@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Settings, Server, Database, Globe } from 'lucide-react';
+import { Settings, Server, Database } from 'lucide-react';
 
 export default function SettingsPage() {
   const apiURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';

@@ -4,8 +4,13 @@ import { useState, useEffect } from 'react';
 import RadarVisualization from '@/components/RadarVisualization';
 import ControlPanel from '@/components/ControlPanel';
 import AgentChat from '@/components/AgentChat';
-import { Network, Globe, AlertCircle, Cpu, ShieldCheck } from 'lucide-react';
+import { Globe, AlertCircle, Cpu, ShieldCheck } from 'lucide-react';
 import api from '@/lib/api';
+
+interface PredictionData {
+  positions: number[];
+  spacings: number[];
+}
 
 export default function Dashboard() {
   const [positions, setPositions] = useState<number[]>([]);
@@ -18,7 +23,7 @@ export default function Dashboard() {
       try {
         await api.get('/health');
         setBackendStatus('online');
-      } catch (e) {
+      } catch (_e) {
         setBackendStatus('offline');
       }
     };
@@ -27,7 +32,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleResults = (data: any) => {
+  const handleResults = (data: PredictionData) => {
     setPositions(data.positions);
     setSpacings(data.spacings);
   };

@@ -5,8 +5,22 @@ import { Target, Activity, Settings2, CheckCircle2, AlertCircle, Download, Zap }
 import api from '@/lib/api';
 import PatternChart from './PatternChart';
 
+interface PredictionData {
+  positions: number[];
+  spacings: number[];
+}
+
+interface VerifyResult {
+  acceptable: boolean;
+  achieved_error: number;
+  target_error: number;
+  crlb_error: number;
+  pattern: { angle: number; af: number }[];
+  spacings: number[];
+}
+
 interface ControlPanelProps {
-  onResults: (data: any) => void;
+  onResults: (data: PredictionData) => void;
   isLoading: boolean;
   setIsLoading: (val: boolean) => void;
 }
@@ -14,7 +28,7 @@ interface ControlPanelProps {
 export default function ControlPanel({ onResults, isLoading, setIsLoading }: ControlPanelProps) {
   const [targetError, setTargetError] = useState<string>("0.1");
   const [snr, setSnr] = useState<string>("20.0");
-  const [verifyResult, setVerifyResult] = useState<any>(null);
+  const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
 
   const handlePredict = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,8 +97,8 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
               snr_db: parseFloat(snr)
            });
            alert(res.data.message);
-        } catch (e) {
-           console.error(e);
+        } catch (_e) {
+           console.error(_e);
         }
       }
     };
