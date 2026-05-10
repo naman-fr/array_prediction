@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Target, Activity, Settings2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Target, Activity, Settings2, CheckCircle2, AlertCircle, Download } from 'lucide-react';
 import axios from 'axios';
 
 interface ControlPanelProps {
@@ -31,14 +31,31 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
       });
       setVerifyResult(vResponse.data);
       
-    } catch (error) {
-      console.error("Error predicting spacings:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
+      } catch (error) {
+        console.error("Error predicting spacings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    const handleExport = () => {
+      if (!verifyResult) return;
+      const dataStr = JSON.stringify({
+          targetError: parseFloat(targetError),
+          achievedError: verifyResult.achieved_error,
+          spacings: verifyResult.spacings || [] // Note: might need to be passed down if not in verifyResult
+      }, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = 'radar_configuration.json';
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    };
+  
+    return (
     <div className="glass-panel p-6 flex flex-col gap-6">
       <div className="flex items-center gap-3 border-b border-white/10 pb-4">
         <div className="bg-blue-500/20 p-2 rounded-lg">
@@ -85,21 +102,31 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
       </form>
 
       {verifyResult && (
-        <div className={`mt-4 p-4 rounded-lg border ${verifyResult.acceptable ? 'bg-green-500/10 border-green-500/30' : 'bg-orange-500/10 border-orange-500/30'} flex items-start gap-3`}>
-          {verifyResult.acceptable ? (
-            <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
-          ) : (
-            <AlertCircle className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
-          )}
-          <div>
-            <h4 className={`text-sm font-bold ${verifyResult.acceptable ? 'text-green-400' : 'text-orange-400'}`}>
-              Verification {verifyResult.acceptable ? 'Passed' : 'Warning'}
-            </h4>
-            <p className="text-xs text-slate-300 mt-1">
-              Achieved RMS Error: <strong>{verifyResult.achieved_error.toFixed(4)}°</strong> 
-              <br/>(Target: {verifyResult.target_error.toFixed(3)}°)
-            </p>
+        <div className="flex flex-col gap-3 mt-4">
+          <div className={`p-4 rounded-lg border ${verifyResult.acceptable ? 'bg-green-500/10 border-green-500/30' : 'bg-orange-500/10 border-orange-500/30'} flex items-start gap-3`}>
+            {verifyResult.acceptable ? (
+              <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
+            )}
+            <div>
+              <h4 className={`text-sm font-bold ${verifyResult.acceptable ? 'text-green-400' : 'text-orange-400'}`}>
+                Verification {verifyResult.acceptable ? 'Passed' : 'Warning'}
+              </h4>
+              <p className="text-xs text-slate-300 mt-1">
+                Achieved RMS Error: <strong>{verifyResult.achieved_error.toFixed(4)}°</strong> 
+                <br/>(Target: {verifyResult.target_error.toFixed(3)}°)
+              </p>
+            </div>
           </div>
+          
+          <button 
+            onClick={handleExport}
+            className="flex items-center justify-center gap-2 w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-300 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export Configuration
+          </button>
         </div>
       )}
     </div>
