@@ -12,13 +12,19 @@ A production-grade, Agentic AI platform for optimizing element spacing in 4-elem
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Docker (Recommended)
 
-- Python 3.8+
-- Node.js 18+
+You can spin up both the FastAPI backend and Next.js frontend simultaneously using Docker Compose:
 
-### Setup the AI Backend
+```bash
+docker-compose up --build
+```
+- Backend API is accessible at `http://localhost:8000`
+- Frontend Dashboard is accessible at `http://localhost:3000`
 
+### Manual Setup
+
+**Backend:**
 ```bash
 cd backend
 python -m venv venv
@@ -29,16 +35,22 @@ python -m venv venv
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
-The backend will run on `http://localhost:8000`.
 
-### Setup the Next.js Frontend
-
+**Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Open `http://localhost:3000` in your browser to interact with the Sentinel AI dashboard.
+
+## 🧪 Testing
+
+We use `pytest` for robust mathematical and API testing.
+
+```bash
+cd backend
+pytest tests/
+```
 
 ## 🧠 Architecture
 
