@@ -5,7 +5,7 @@ import RadarVisualization from '@/components/RadarVisualization';
 import ControlPanel from '@/components/ControlPanel';
 import AgentChat from '@/components/AgentChat';
 import { Globe, AlertCircle, Cpu, ShieldCheck } from 'lucide-react';
-import api from '../../lib/api-client';
+import api from '@/core/api';
 
 interface PredictionData {
   positions: number[];
