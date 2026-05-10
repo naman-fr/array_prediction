@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import RadarVisualization from '@/components/RadarVisualization';
 import ControlPanel from '@/components/ControlPanel';
+import AgentChat from '@/components/AgentChat';
 import { Network } from 'lucide-react';
 
 export default function Home() {
@@ -77,11 +78,8 @@ export default function Home() {
               <RadarVisualization positions={positions} />
             </div>
 
-            {/* Agentic Chat Area - Placeholder for Phase 4 */}
-            <div className="glass-panel p-6 opacity-50 cursor-not-allowed">
-              <h3 className="text-lg font-bold text-slate-200 mb-2">Agentic Assistant (Coming soon)</h3>
-              <p className="text-sm text-slate-400">Natural language configuration will appear here.</p>
-            </div>
+            {/* Agentic Chat Area */}
+            <AgentChat onResultsUpdate={handleResults} />
           </div>
         </div>
         
