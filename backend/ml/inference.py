@@ -5,6 +5,7 @@ from ml.model import load_model, train_model
 from ml.dataset import generate_synthetic_dataset, simulate_rms_error
 from ml.crlb import calculate_crlb_rms
 from ml.pattern import calculate_array_factor
+from ml.optimization import optimize_spacings
 import logging
 
 logger = logging.getLogger("sentinel-ml-inference")
@@ -31,8 +32,12 @@ def predict_spacings(target_error: float):
     # Enforce CRT-derived ambiguity bounds
     clipped_spacings = enforce_crt_bounds(pred_spacings)
     
+    # NEW: Global Physics-Driven Optimization Fine-tuning
+    # This ensures we don't just 'guess' with the NN, but actually verify and optimize
+    refined_spacings = optimize_spacings(clipped_spacings, target_error)
+    
     # Compute positions
-    d1, d2, d3 = clipped_spacings
+    d1, d2, d3 = refined_spacings
     positions = [0.0, float(d1), float(d1 + d2), float(d1 + d2 + d3)]
 
     return {
