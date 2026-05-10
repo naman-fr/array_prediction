@@ -23,7 +23,7 @@ export default function Dashboard() {
       try {
         await api.get('/health');
         setBackendStatus('online');
-      } catch (_e) {
+      } catch {
         setBackendStatus('offline');
       }
     };

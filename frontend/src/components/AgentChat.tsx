@@ -58,7 +58,7 @@ export default function AgentChat({ onResultsUpdate }: AgentChatProps) {
       if (response.data.data) {
         onResultsUpdate(response.data.data as PredictionData);
       }
-    } catch (_error) {
+    } catch {
       setMessages(prev => [...prev, { role: 'agent', content: 'Agent: Error connecting to the server.' }]);
     } finally {
       setIsLoading(false);

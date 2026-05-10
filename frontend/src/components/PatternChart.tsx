@@ -35,7 +35,8 @@ export default function PatternChart({ data }: PatternChartProps) {
           />
           <Tooltip 
             contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '12px' }}
-            formatter={(value: any) => [`${parseFloat(value).toFixed(2)} dB`, 'Magnitude']}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            formatter={(value: any) => [`${parseFloat(value.toString()).toFixed(2)} dB`, 'Magnitude']}
             labelFormatter={(label) => `Angle: ${label}°`}
           />
           <Area type="monotone" dataKey="magnitude" stroke="#3b82f6" fillOpacity={1} fill="url(#colorMag)" />
