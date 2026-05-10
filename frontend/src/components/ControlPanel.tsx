@@ -12,6 +12,7 @@ interface ControlPanelProps {
 
 export default function ControlPanel({ onResults, isLoading, setIsLoading }: ControlPanelProps) {
   const [targetError, setTargetError] = useState<string>("0.1");
+  const [snr, setSnr] = useState<string>("20.0");
   const [verifyResult, setVerifyResult] = useState<any>(null);
 
   const handlePredict = async (e: React.FormEvent) => {
@@ -27,7 +28,8 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
       // Auto verify
       const vResponse = await axios.post('http://localhost:8000/verify', {
         spacings: response.data.spacings,
-        target_error: parseFloat(targetError)
+        target_error: parseFloat(targetError),
+        snr_db: parseFloat(snr)
       });
       setVerifyResult(vResponse.data);
       
@@ -87,6 +89,26 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
           </div>
         </div>
 
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-purple-400" />
+            Operational SNR (dB)
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              step="1"
+              min="0"
+              max="50"
+              value={snr}
+              onChange={(e) => setSnr(e.target.value)}
+              className="w-full glass-input rounded-lg px-4 py-3 text-lg"
+              required
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">dB</span>
+          </div>
+        </div>
+
         <button 
           type="submit" 
           disabled={isLoading}
@@ -116,6 +138,7 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
               <p className="text-xs text-slate-300 mt-1">
                 Achieved RMS Error: <strong>{verifyResult.achieved_error.toFixed(4)}°</strong> 
                 <br/>(Target: {verifyResult.target_error.toFixed(3)}°)
+                <br/>CRLB Theoretical Limit: <strong>{verifyResult.crlb_error.toFixed(4)}°</strong>
               </p>
             </div>
           </div>

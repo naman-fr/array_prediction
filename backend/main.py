@@ -35,10 +35,12 @@ class PredictResponse(BaseModel):
 class VerifyRequest(BaseModel):
     spacings: List[float]
     target_error: float
+    snr_db: Optional[float] = 20.0
 
 class VerifyResponse(BaseModel):
     achieved_error: float
     target_error: float
+    crlb_error: float
     acceptable: bool
 
 class ChatRequest(BaseModel):
@@ -63,10 +65,10 @@ def predict(request: PredictRequest):
 
 @app.post("/verify", response_model=VerifyResponse)
 def verify(request: VerifyRequest):
-    logger.info(f"Received verify request for target error: {request.target_error}°")
+    logger.info(f"Received verify request for target error: {request.target_error}° at {request.snr_db} dB SNR")
     try:
-        result = verify_spacings(request.spacings, request.target_error)
-        logger.info(f"Verification completed. Achieved: {result['achieved_error']:.4f}°, Acceptable: {result['acceptable']}")
+        result = verify_spacings(request.spacings, request.target_error, request.snr_db)
+        logger.info(f"Verification completed. Achieved: {result['achieved_error']:.4f}°, CRLB: {result['crlb_error']:.4f}°")
         return result
     except Exception as e:
         logger.error(f"Verification failed: {e}", exc_info=True)

@@ -20,6 +20,7 @@ def test_verify_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert "achieved_error" in data
+    assert "crlb_error" in data
     assert "acceptable" in data
 
 def test_chat_endpoint():
