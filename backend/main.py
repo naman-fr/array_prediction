@@ -2,9 +2,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
+import logging
+import time
 
 from backend.ml.inference import predict_spacings, verify_spacings
 from backend.agent import parse_and_execute_intent
+
+# Configure structured logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("sentinel-api")
 
 app = FastAPI(title="Radar Array Spacing Predictor API")
 
@@ -41,18 +50,26 @@ class ChatResponse(BaseModel):
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(request: PredictRequest):
+    start_time = time.time()
+    logger.info(f"Received predict request for target error: {request.target_error}°")
     try:
         result = predict_spacings(request.target_error)
+        latency = (time.time() - start_time) * 1000
+        logger.info(f"Prediction successful in {latency:.2f}ms. Generated {len(result['spacings'])} spacings.")
         return result
     except Exception as e:
+        logger.error(f"Prediction failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/verify", response_model=VerifyResponse)
 def verify(request: VerifyRequest):
+    logger.info(f"Received verify request for target error: {request.target_error}°")
     try:
         result = verify_spacings(request.spacings, request.target_error)
+        logger.info(f"Verification completed. Achieved: {result['achieved_error']:.4f}°, Acceptable: {result['acceptable']}")
         return result
     except Exception as e:
+        logger.error(f"Verification failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/model/info")
@@ -65,8 +82,11 @@ def get_model_info():
 
 @app.post("/chat", response_model=ChatResponse)
 def chat_agent(request: ChatRequest):
+    logger.info("Received chat request")
     try:
         result = parse_and_execute_intent(request.message)
+        logger.info("Chat request processed successfully")
         return result
     except Exception as e:
+        logger.error(f"Chat request failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

@@ -3,6 +3,9 @@ import numpy as np
 from backend.ml.constants import MAX_SPACING, FREQS, NOISE_STD
 from backend.ml.model import load_model, train_model
 from backend.ml.dataset import generate_synthetic_dataset, simulate_rms_error
+import logging
+
+logger = logging.getLogger("sentinel-ml-inference")
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "spacing_predictor.h5")
 
@@ -12,10 +15,12 @@ def enforce_crt_bounds(spacings):
 def predict_spacings(target_error: float):
     # Ensure model exists, otherwise generate some quick dummy weights for dev (in prod you'd pre-train)
     if not os.path.exists(MODEL_PATH):
-        print("Model not found, training a quick dummy model for demonstration...")
+        logger.warning("Model not found, training a quick dummy model for demonstration...")
         X, Y = generate_synthetic_dataset(num_samples=100) # Quick train
         train_model(X, Y, model_path=MODEL_PATH, epochs=5)
+        logger.info("Dummy model training completed.")
 
+    logger.debug(f"Loading model from {MODEL_PATH}")
     model = load_model(MODEL_PATH)
     target_err_arr = np.array([[target_error]], dtype=np.float32)
     

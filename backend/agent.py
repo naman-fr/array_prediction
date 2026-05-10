@@ -1,6 +1,10 @@
 import re
 from backend.ml.inference import predict_spacings, verify_spacings
 
+import logging
+
+logger = logging.getLogger("sentinel-agent")
+
 def parse_and_execute_intent(message: str):
     """
     A lightweight rule-based Agentic parser that mimics an LLM tool-calling agent.
@@ -13,6 +17,7 @@ def parse_and_execute_intent(message: str):
     match = re.search(r'([0-9]*\.?[0-9]+)\s*(deg|degree|°|error|rms)', message)
     if match:
         target_error = float(match.group(1))
+        logger.info(f"Agent extracted target error: {target_error}")
         
         # Invoke ML Model
         try:
@@ -33,13 +38,16 @@ def parse_and_execute_intent(message: str):
             else:
                 reply += f"⚠️ Warning: Achieved error {v_results['achieved_error']:.4f}° exceeds target."
 
+            logger.info("Agent successfully parsed and executed intent.")
             return {
                 "reply": reply,
                 "data": results
             }
         except Exception as e:
+            logger.error(f"Agent encountered an error: {e}", exc_info=True)
             return {"reply": f"Agent: I encountered an error running the ML model: {str(e)}", "data": None}
             
+    logger.info("Agent could not extract target error from message.")
     return {
         "reply": "Agent: I can help you design radar arrays. Please specify a target RMS error, like 'Design an array with 0.15 degrees error'.",
         "data": None
