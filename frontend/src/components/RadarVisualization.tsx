@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid, Sphere, Cylinder, Text } from '@react-three/drei';
+import { OrbitControls, Environment, Grid, Sphere, Cylinder, Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface RadarVisualizationProps {
   positions: number[];
 }
 
-const AntennaElement = ({ position, index }: { position: [number, number, number], index: number }) => {
+const AntennaElement = ({ position, index, actualPos }: { position: [number, number, number], index: number, actualPos: number }) => {
   const meshRef = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
   
   useFrame((state) => {
     if (meshRef.current) {
@@ -22,19 +23,42 @@ const AntennaElement = ({ position, index }: { position: [number, number, number
   return (
     <group position={position} ref={meshRef}>
       {/* Base */}
-      <Cylinder args={[0.1, 0.1, 0.5, 16]} position={[0, 0.25, 0]}>
-        <meshStandardMaterial color="#3b82f6" metalness={0.8} roughness={0.2} />
+      <Cylinder 
+        args={[0.1, 0.1, 0.5, 16]} 
+        position={[0, 0.25, 0]}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <meshStandardMaterial color={hovered ? "#60a5fa" : "#3b82f6"} metalness={0.8} roughness={0.2} />
       </Cylinder>
       {/* Top sphere (sensor) */}
       <Sphere args={[0.15, 32, 32]} position={[0, 0.55, 0]}>
-        <meshStandardMaterial color="#60a5fa" emissive="#3b82f6" emissiveIntensity={0.5} />
+        <meshStandardMaterial color={hovered ? "#ffffff" : "#60a5fa"} emissive="#3b82f6" emissiveIntensity={hovered ? 1 : 0.5} />
       </Sphere>
+      
+      {/* HTML 3D Tooltip */}
+      {hovered && (
+        <Html position={[0, 1.2, 0]} center>
+          <div className="bg-slate-900/90 text-white px-3 py-2 rounded-lg border border-blue-500/50 shadow-xl backdrop-blur-md whitespace-nowrap text-xs pointer-events-none z-50">
+            <div className="font-bold text-blue-400 mb-1">Element {index + 1}</div>
+            <div className="flex justify-between gap-4">
+              <span className="text-slate-400">Phase Center ($d_n$):</span>
+              <span className="font-mono text-blue-200">{actualPos.toFixed(4)}m</span>
+            </div>
+            <div className="flex justify-between gap-4 mt-0.5">
+              <span className="text-slate-400">Local Field:</span>
+              <span className="font-mono text-green-300 text-[10px]">Nominal</span>
+            </div>
+          </div>
+        </Html>
+      )}
+      
       {/* Label */}
-      <Text position={[0, 0.8, 0]} fontSize={0.2} color="white" anchorX="center" anchorY="middle">
+      <Text position={[0, 0.8, 0]} fontSize={0.2} color={hovered ? "white" : "#94a3b8"} anchorX="center" anchorY="middle">
         {`Antenna ${index + 1}`}
       </Text>
       <Text position={[0, -0.2, 0]} fontSize={0.15} color="#cbd5e1" anchorX="center" anchorY="middle">
-        {`${position[0].toFixed(2)}m`}
+        {`${actualPos.toFixed(2)}m`}
       </Text>
     </group>
   );
@@ -70,8 +94,23 @@ export default function RadarVisualization({ positions }: RadarVisualizationProp
         )}
 
         {positions.map((pos, i) => (
-          <AntennaElement key={i} position={[pos + offsetX, 0, 0]} index={i} />
+          <AntennaElement key={i} position={[pos + offsetX, 0, 0]} index={i} actualPos={pos} />
         ))}
+        
+        {/* Radome (Digital Twin Protective Dome) */}
+        {positions.length > 0 && (
+          <mesh position={[0, 0.3, 0]}>
+            <capsuleGeometry args={[totalLength / 2 + 0.5, totalLength, 32, 32]} />
+            <meshPhysicalMaterial 
+              color="#ffffff" 
+              transparent={true} 
+              opacity={0.05} 
+              roughness={0.1} 
+              transmission={0.9} 
+              thickness={0.1}
+            />
+          </mesh>
+        )}
         
         <Grid 
           infiniteGrid 
