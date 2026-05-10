@@ -1,81 +1,122 @@
 import re
-from backend.ml.inference import predict_spacings, verify_spacings
-
 import logging
+from typing import Callable, Dict, Any
+
+from backend.ml.inference import predict_spacings, verify_spacings
 
 logger = logging.getLogger("sentinel-agent")
 
-# In-memory store for Agentic State (in prod, use Redis)
+# In-memory store for Agentic State
 agent_memory = {}
 
-def parse_and_execute_intent(message: str, session_id: str = "default"):
+class Tool:
+    def __init__(self, name: str, description: str, func: Callable):
+        self.name = name
+        self.description = description
+        self.func = func
+
+class AgentExecutor:
     """
-    A lightweight rule-based Agentic parser that mimics an LLM tool-calling agent.
-    Maintains state across sessions to understand relative commands.
-    In a full production scenario, this would use LangChain + OpenAI/Gemini
-    with tool-calling definitions.
+    ReAct (Reasoning + Acting) Agent Executor Architecture.
+    Maintains a tool registry and state across sessions.
     """
-    message_lower = message.lower()
-    
-    # Check for relative commands
-    if session_id in agent_memory:
-        last_error = agent_memory[session_id].get("last_target_error")
-        if last_error:
-            if "half" in message_lower:
-                target_error = last_error / 2.0
-                return process_target_error(target_error, session_id)
-            
-            relative_match = re.search(r'(reduce|decrease|tighter|increase|looser).*by\s+([0-9]*\.?[0-9]+)', message_lower)
-            if relative_match:
-                direction = relative_match.group(1)
-                amount = float(relative_match.group(2))
-                if direction in ["reduce", "decrease", "tighter"]:
-                    target_error = last_error - amount
-                else:
-                    target_error = last_error + amount
-                    
-                if target_error <= 0:
-                    return {"reply": "Agent: I cannot set the target error to 0 or below. Please provide a valid positive error target.", "data": None}
-                return process_target_error(target_error, session_id)
+    def __init__(self):
+        self.tools: Dict[str, Tool] = {}
+        self._register_tools()
 
-    # Absolute command matching
-    match = re.search(r'([0-9]*\.?[0-9]+)\s*(deg|degree|°|error|rms)', message_lower)
-    if match:
-        target_error = float(match.group(1))
-        return process_target_error(target_error, session_id)
-            
-    logger.info("Agent could not extract target error from message.")
-    return {
-        "reply": "Agent: I can help you design radar arrays. Please specify a target RMS error (e.g., 'Design an array with 0.15 degrees error') or use relative commands like 'reduce by 0.05'.",
-        "data": None
-    }
+    def _register_tools(self):
+        self.tools["predict_and_verify"] = Tool(
+            name="predict_and_verify",
+            description="Predicts optimal array spacings for a given target RMS error and verifies the result.",
+            func=self._tool_predict_and_verify
+        )
+        self.tools["adjust_relative"] = Tool(
+            name="adjust_relative",
+            description="Adjusts the previously configured target error by a relative amount.",
+            func=self._tool_adjust_relative
+        )
+        self.tools["help"] = Tool(
+            name="help",
+            description="Provides instructions on how to use the agent.",
+            func=self._tool_help
+        )
 
-def process_target_error(target_error: float, session_id: str):
-    logger.info(f"Agent executing for target error: {target_error}")
-    
-    # Store in memory
-    if session_id not in agent_memory:
-        agent_memory[session_id] = {}
-    agent_memory[session_id]["last_target_error"] = target_error
-
-    # Invoke ML Model
-    try:
-        results = predict_spacings(target_error)
-        v_results = verify_spacings(results["spacings"], target_error)
+    def _tool_predict_and_verify(self, target_error: float, session_id: str) -> Dict[str, Any]:
+        logger.info(f"Tool 'predict_and_verify' executing for target error: {target_error}")
         
-        reply = f"Agent: I've calculated the optimal array spacings for a target error of {target_error}°.\n\n"
-        reply += f"Spacings: d1={results['spacings'][0]:.4f}m, d2={results['spacings'][1]:.4f}m, d3={results['spacings'][2]:.4f}m.\n"
+        if session_id not in agent_memory:
+            agent_memory[session_id] = {}
+        agent_memory[session_id]["last_target_error"] = target_error
+
+        try:
+            results = predict_spacings(target_error)
+            v_results = verify_spacings(results["spacings"], target_error)
+            
+            reply = f"Agent: I've calculated the optimal array spacings for a target error of {target_error}°.\n\n"
+            reply += f"Spacings: d1={results['spacings'][0]:.4f}m, d2={results['spacings'][1]:.4f}m, d3={results['spacings'][2]:.4f}m.\n"
+            
+            if v_results["acceptable"]:
+                reply += f"✅ Verification Passed: The simulated achieved error is {v_results['achieved_error']:.4f}°."
+            else:
+                reply += f"⚠️ Warning: Achieved error {v_results['achieved_error']:.4f}° exceeds target."
+
+            return {"reply": reply, "data": results}
+        except Exception as e:
+            logger.error(f"Tool error: {e}", exc_info=True)
+            return {"reply": f"Agent: I encountered an error running the ML model: {str(e)}", "data": None}
+
+    def _tool_adjust_relative(self, direction: str, amount: float, session_id: str) -> Dict[str, Any]:
+        if session_id not in agent_memory or "last_target_error" not in agent_memory[session_id]:
+            return {"reply": "Agent: I don't have a previous configuration to adjust. Please provide an absolute target first.", "data": None}
+            
+        last_error = agent_memory[session_id]["last_target_error"]
         
-        if v_results["acceptable"]:
-            reply += f"✅ Verification Passed: The simulated achieved error is {v_results['achieved_error']:.4f}°."
+        if direction == "half":
+            target_error = last_error / 2.0
+        elif direction in ["reduce", "decrease", "tighter"]:
+            target_error = last_error - amount
         else:
-            reply += f"⚠️ Warning: Achieved error {v_results['achieved_error']:.4f}° exceeds target."
+            target_error = last_error + amount
+            
+        if target_error <= 0:
+            return {"reply": "Agent: I cannot set the target error to 0 or below. Please provide a valid positive error target.", "data": None}
+            
+        return self._tool_predict_and_verify(target_error, session_id)
 
-        logger.info("Agent successfully parsed and executed intent.")
+    def _tool_help(self, *args, **kwargs) -> Dict[str, Any]:
         return {
-            "reply": reply,
-            "data": results
+            "reply": "Agent: I can help you design radar arrays. Please specify a target RMS error (e.g., 'Design an array with 0.15 degrees error') or use relative commands like 'reduce by 0.05'.",
+            "data": None
         }
-    except Exception as e:
-        logger.error(f"Agent encountered an error: {e}", exc_info=True)
-        return {"reply": f"Agent: I encountered an error running the ML model: {str(e)}", "data": None}
+
+    def parse_and_execute(self, message: str, session_id: str = "default") -> Dict[str, Any]:
+        """
+        NLU Router: Parses intent and dispatches to the correct tool.
+        """
+        message_lower = message.lower()
+        
+        # 1. Intent: Adjust Relative (Half)
+        if "half" in message_lower:
+            return self.tools["adjust_relative"].func("half", 0.0, session_id)
+            
+        # 2. Intent: Adjust Relative (Math)
+        relative_match = re.search(r'(reduce|decrease|tighter|increase|looser).*by\s+([0-9]*\.?[0-9]+)', message_lower)
+        if relative_match:
+            direction = relative_match.group(1)
+            amount = float(relative_match.group(2))
+            return self.tools["adjust_relative"].func(direction, amount, session_id)
+
+        # 3. Intent: Absolute Predict
+        absolute_match = re.search(r'([0-9]*\.?[0-9]+)\s*(deg|degree|°|error|rms)', message_lower)
+        if absolute_match:
+            target_error = float(absolute_match.group(1))
+            return self.tools["predict_and_verify"].func(target_error, session_id)
+            
+        # 4. Intent: Unknown / Help
+        return self.tools["help"].func()
+
+# Singleton instance
+executor = AgentExecutor()
+
+def parse_and_execute_intent(message: str, session_id: str = "default"):
+    return executor.parse_and_execute(message, session_id)
