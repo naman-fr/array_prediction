@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, User } from 'lucide-react';
-import api from '../lib/api';
+import api from '../lib/api-client';
 
 interface Message {
   role: 'user' | 'agent';
