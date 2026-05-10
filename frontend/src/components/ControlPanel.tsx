@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Target, Activity, Settings2, CheckCircle2, AlertCircle, Download, Zap } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
 import PatternChart from './PatternChart';
 
 interface ControlPanelProps {
@@ -21,13 +21,13 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
     setIsLoading(true);
     setVerifyResult(null);
     try {
-      const response = await axios.post('http://localhost:8000/predict', {
+      const response = await api.post('/predict', {
         target_error: parseFloat(targetError)
       });
       onResults(response.data);
       
       // Auto verify
-      const vResponse = await axios.post('http://localhost:8000/verify', {
+      const vResponse = await api.post('/verify', {
         spacings: response.data.spacings,
         target_error: parseFloat(targetError),
         snr_db: parseFloat(snr)
@@ -60,7 +60,7 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
 
     const handleRetrain = async () => {
       try {
-        await axios.post('http://localhost:8000/model/retrain', {
+        await api.post('/model/retrain', {
           num_samples: 2000,
           epochs: 10,
           snr_db: parseFloat(snr)
@@ -78,7 +78,7 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
         // but let's assume it was passed correctly. For this demo, let's just show the alert.
         alert('Initiating HIL deployment...');
         try {
-           const res = await axios.post('http://localhost:8000/deploy', {
+           const res = await api.post('/deploy', {
               spacings: [0.1, 0.1, 0.1], // mock for now if not available
               snr_db: parseFloat(snr)
            });

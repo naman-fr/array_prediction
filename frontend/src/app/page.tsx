@@ -1,15 +1,31 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import RadarVisualization from '@/components/RadarVisualization';
 import ControlPanel from '@/components/ControlPanel';
 import AgentChat from '@/components/AgentChat';
-import { Network } from 'lucide-react';
+import { Network, Globe, AlertCircle } from 'lucide-react';
+import api from '@/lib/api';
 
 export default function Home() {
   const [positions, setPositions] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [spacings, setSpacings] = useState<number[]>([]);
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+
+  useEffect(() => {
+    const checkHealth = async () => {
+      try {
+        await api.get('/health');
+        setBackendStatus('online');
+      } catch (e) {
+        setBackendStatus('offline');
+      }
+    };
+    checkHealth();
+    const interval = setInterval(checkHealth, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleResults = (data: any) => {
     setPositions(data.positions);
@@ -33,8 +49,22 @@ export default function Home() {
               <p className="text-slate-400 font-medium tracking-wide">Radar Array Optimization Platform</p>
             </div>
           </div>
-          <div className="px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold tracking-wider">
-            SYSTEM ONLINE
+          <div className="flex items-center gap-3">
+            {backendStatus === 'online' ? (
+              <div className="px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-semibold tracking-wider flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                BACKEND ONLINE
+              </div>
+            ) : backendStatus === 'offline' ? (
+              <div className="px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-semibold tracking-wider flex items-center gap-2 animate-pulse">
+                <AlertCircle className="w-4 h-4" />
+                BACKEND OFFLINE
+              </div>
+            ) : (
+              <div className="px-4 py-2 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-400 text-sm font-semibold tracking-wider">
+                CHECKING SYSTEM...
+              </div>
+            )}
           </div>
         </header>
 

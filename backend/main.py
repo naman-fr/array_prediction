@@ -29,6 +29,14 @@ app.add_middleware(
 # Instrument the app for Prometheus metrics
 Instrumentator().instrument(app).expose(app)
 
+@app.get("/health")
+def health_check():
+    return {
+        "status": "online",
+        "timestamp": logging.Formatter("%(asctime)s").format(logging.makeLogRecord({})),
+        "version": "1.0.0"
+    }
+
 # Include Routers
 app.include_router(router_ml.router, tags=["Machine Learning"])
 app.include_router(router_chat.router, tags=["Agentic Chat"])

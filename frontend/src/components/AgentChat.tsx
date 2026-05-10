@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, User } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
 
 interface Message {
   role: 'user' | 'agent';
@@ -46,7 +46,7 @@ export default function AgentChat({ onResultsUpdate }: AgentChatProps) {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/chat', {
+      const response = await api.post('/chat', {
         message: userMessage,
         session_id: sessionId
       });
