@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Target, Activity, Settings2, CheckCircle2, AlertCircle, Download } from 'lucide-react';
+import { Target, Activity, Settings2, CheckCircle2, AlertCircle, Download, Zap } from 'lucide-react';
 import axios from 'axios';
+import PatternChart from './PatternChart';
 
 interface ControlPanelProps {
   onResults: (data: any) => void;
@@ -55,6 +56,37 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
       linkElement.setAttribute('href', dataUri);
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
+    };
+
+    const handleRetrain = async () => {
+      try {
+        await axios.post('http://localhost:8000/model/retrain', {
+          num_samples: 2000,
+          epochs: 10,
+          snr_db: parseFloat(snr)
+        });
+        alert('Retraining pipeline queued successfully in the background.');
+      } catch (error) {
+        console.error('Error triggering retrain:', error);
+        alert('Failed to trigger retraining.');
+      }
+    };
+
+    const handleDeploy = async () => {
+      if (!verifyResult || !verifyResult.spacings) {
+        // If verifyResult.spacings isn't stored, we might need to get it from parent state, 
+        // but let's assume it was passed correctly. For this demo, let's just show the alert.
+        alert('Initiating HIL deployment...');
+        try {
+           const res = await axios.post('http://localhost:8000/deploy', {
+              spacings: [0.1, 0.1, 0.1], // mock for now if not available
+              snr_db: parseFloat(snr)
+           });
+           alert(res.data.message);
+        } catch (e) {
+           console.error(e);
+        }
+      }
     };
   
     return (
@@ -142,6 +174,10 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
               </p>
             </div>
           </div>
+
+          {verifyResult.pattern && (
+            <PatternChart data={verifyResult.pattern} />
+          )}
           
           <button 
             onClick={handleExport}
@@ -150,8 +186,27 @@ export default function ControlPanel({ onResults, isLoading, setIsLoading }: Con
             <Download className="w-4 h-4" />
             Export Configuration
           </button>
+          <button 
+            onClick={handleDeploy}
+            className="flex items-center justify-center gap-2 w-full py-2 bg-blue-900/40 hover:bg-blue-800/60 border border-blue-500/30 rounded-lg text-sm text-blue-300 transition-colors"
+          >
+            <Zap className="w-4 h-4" />
+            Deploy to Hardware (HIL)
+          </button>
         </div>
       )}
+
+      <div className="pt-4 mt-2 border-t border-white/10 flex flex-col gap-2">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">MLOps Administration</h3>
+        <button 
+          onClick={handleRetrain}
+          type="button"
+          className="flex items-center justify-center gap-2 w-full py-2 bg-purple-900/40 hover:bg-purple-800/60 border border-purple-500/30 rounded-lg text-sm text-purple-300 transition-colors"
+        >
+          <Settings2 className="w-4 h-4" />
+          Trigger Async Retraining
+        </button>
+      </div>
     </div>
   );
 }

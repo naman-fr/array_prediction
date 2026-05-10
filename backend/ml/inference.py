@@ -4,6 +4,7 @@ from backend.ml.constants import MAX_SPACING, FREQS, DEFAULT_SNR_DB
 from backend.ml.model import load_model, train_model
 from backend.ml.dataset import generate_synthetic_dataset, simulate_rms_error
 from backend.ml.crlb import calculate_crlb_rms
+from backend.ml.pattern import calculate_array_factor
 import logging
 
 logger = logging.getLogger("sentinel-ml-inference")
@@ -59,9 +60,13 @@ def verify_spacings(spacings: list, target_error: float, snr_db: float = DEFAULT
         snr_db=snr_db
     )
     
+    angles_deg, af_db = calculate_array_factor([d1, d2, d3])
+    pattern_data = [{"angle": a, "magnitude": m} for a, m in zip(angles_deg, af_db)]
+    
     return {
         "achieved_error": float(rms_err_achieved),
         "target_error": float(target_error),
         "crlb_error": float(crlb_rms),
-        "acceptable": bool(rms_err_achieved <= target_error * 1.1)
+        "acceptable": bool(rms_err_achieved <= target_error * 1.1),
+        "pattern": pattern_data
     }

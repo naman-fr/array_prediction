@@ -1,12 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import logging
 import time
 
-from backend.ml.inference import predict_spacings, verify_spacings
+from backend.ml.inference import predict_spacings, verify_spacings, MODEL_PATH
+from backend.ml.dataset import generate_synthetic_dataset
+from backend.ml.model import train_model
 from backend.agent import parse_and_execute_intent
+from backend.hil_mock import deploy_to_hardware
 
 # Configure structured logging
 logging.basicConfig(
@@ -37,11 +40,21 @@ class VerifyRequest(BaseModel):
     target_error: float
     snr_db: Optional[float] = 20.0
 
+class PatternPoint(BaseModel):
+    angle: float
+    magnitude: float
+
 class VerifyResponse(BaseModel):
     achieved_error: float
     target_error: float
     crlb_error: float
     acceptable: bool
+    pattern: List[PatternPoint]
+
+class RetrainRequest(BaseModel):
+    num_samples: int = 2000
+    epochs: int = 10
+    snr_db: float = 20.0
 
 class ChatRequest(BaseModel):
     message: str
@@ -49,6 +62,10 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     data: Optional[dict] = None
+
+class DeployRequest(BaseModel):
+    spacings: List[float]
+    snr_db: float = 20.0
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(request: PredictRequest):
@@ -82,6 +99,23 @@ def get_model_info():
         "outputs": "Optimal element spacings [d1, d2, d3]"
     }
 
+def background_retrain_task(num_samples: int, epochs: int, snr_db: float):
+    logger.info(f"Starting background retraining with {num_samples} samples at {snr_db} dB SNR...")
+    start_time = time.time()
+    try:
+        X, Y = generate_synthetic_dataset(num_samples=num_samples, snr_db=snr_db)
+        train_model(X, Y, model_path=MODEL_PATH, epochs=epochs)
+        elapsed = time.time() - start_time
+        logger.info(f"Background retraining completed successfully in {elapsed:.2f}s.")
+    except Exception as e:
+        logger.error(f"Background retraining failed: {e}", exc_info=True)
+
+@app.post("/model/retrain")
+def retrain_model(request: RetrainRequest, background_tasks: BackgroundTasks):
+    logger.info(f"Received request to retrain model with {request.num_samples} samples.")
+    background_tasks.add_task(background_retrain_task, request.num_samples, request.epochs, request.snr_db)
+    return {"message": "Retraining job has been queued in the background."}
+
 @app.post("/chat", response_model=ChatResponse)
 def chat_agent(request: ChatRequest):
     logger.info("Received chat request")
@@ -91,4 +125,14 @@ def chat_agent(request: ChatRequest):
         return result
     except Exception as e:
         logger.error(f"Chat request failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/deploy")
+def deploy_hardware(request: DeployRequest):
+    logger.info("Received hardware deployment request.")
+    try:
+        result = deploy_to_hardware(request.spacings, request.snr_db)
+        return result
+    except Exception as e:
+        logger.error(f"Deployment failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
