@@ -3,11 +3,10 @@ import logging
 from typing import Callable, Dict, Any
 
 from backend.ml.inference import predict_spacings, verify_spacings
+from backend.db.database import SessionLocal
+from backend.db.models import ChatSession
 
 logger = logging.getLogger("sentinel-agent")
-
-# In-memory store for Agentic State
-agent_memory = {}
 
 class Tool:
     def __init__(self, name: str, description: str, func: Callable):
@@ -44,9 +43,18 @@ class AgentExecutor:
     def _tool_predict_and_verify(self, target_error: float, session_id: str) -> Dict[str, Any]:
         logger.info(f"Tool 'predict_and_verify' executing for target error: {target_error}")
         
-        if session_id not in agent_memory:
-            agent_memory[session_id] = {}
-        agent_memory[session_id]["last_target_error"] = target_error
+        # Persist to DB
+        db = SessionLocal()
+        try:
+            session_obj = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+            if not session_obj:
+                session_obj = ChatSession(session_id=session_id, last_target_error=target_error)
+                db.add(session_obj)
+            else:
+                session_obj.last_target_error = target_error
+            db.commit()
+        finally:
+            db.close()
 
         try:
             results = predict_spacings(target_error)
@@ -66,10 +74,14 @@ class AgentExecutor:
             return {"reply": f"Agent: I encountered an error running the ML model: {str(e)}", "data": None}
 
     def _tool_adjust_relative(self, direction: str, amount: float, session_id: str) -> Dict[str, Any]:
-        if session_id not in agent_memory or "last_target_error" not in agent_memory[session_id]:
-            return {"reply": "Agent: I don't have a previous configuration to adjust. Please provide an absolute target first.", "data": None}
-            
-        last_error = agent_memory[session_id]["last_target_error"]
+        db = SessionLocal()
+        try:
+            session_obj = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+            if not session_obj or session_obj.last_target_error is None:
+                return {"reply": "Agent: I don't have a previous configuration to adjust. Please provide an absolute target first.", "data": None}
+            last_error = session_obj.last_target_error
+        finally:
+            db.close()
         
         if direction == "half":
             target_error = last_error / 2.0
