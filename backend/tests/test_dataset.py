@@ -9,7 +9,7 @@ def test_wrap_to_2pi():
     assert np.isclose(wrap_to_2pi(-np.pi), np.pi)
 
 def test_simulate_rms_error():
-    spacings = [0.1, 0.1, 0.1]
+    spacings = [0.05, 0.05, 0.05]
     angles = np.array([-10, 0, 10])
     err = simulate_rms_error(spacings, angles, FREQS, snr_db=100.0)
     assert isinstance(err, float)

@@ -23,9 +23,10 @@ def crt_unwrap_baseline(phi_meas, freqs, dist):
     
     # 1. Compute difference frequency (lowest ambiguity)
     f_diff = f_sorted[0] - f_sorted[-1]
-    phi_diff = wrap_to_2pi(phi_sorted[0] - phi_sorted[-1])
+    # Use signed difference to handle negative DOA
+    phi_diff = (phi_sorted[0] - phi_sorted[-1] + np.pi) % (2 * np.pi) - np.pi
     
-    # 2. Coarse estimate of gamma = (t / c) or equivalent
+    # 2. Coarse estimate of gamma = (d/c * sin_theta)
     gamma_coarse = phi_diff / (2.0 * np.pi * f_diff)
     
     # 3. Use coarse estimate to unwrap the highest frequency (finest resolution)
