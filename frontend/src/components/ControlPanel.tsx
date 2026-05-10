@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Target, Activity, Settings2, CheckCircle2, AlertCircle, Download, Zap } from 'lucide-react';
-import api from '@/lib/api';
+import api from '../lib/api';
 import PatternChart from './PatternChart';
 
 interface PredictionData {
