@@ -1,5 +1,5 @@
 import numpy as np
-from backend.ml.constants import C
+from ml.constants import C
 
 def calculate_crlb_rms(spacings, freqs, angles, snr_db):
     """

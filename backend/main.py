@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 import logging
 
-from backend.api import router_ml, router_chat, router_hardware
-from backend.db.database import engine, Base
+from api import router_ml, router_chat, router_hardware
+from db.database import engine, Base
 
 # Create database tables
 Base.metadata.create_all(bind=engine)

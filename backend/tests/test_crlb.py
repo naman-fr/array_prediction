@@ -1,6 +1,6 @@
 import numpy as np
-from backend.ml.crlb import calculate_crlb_rms
-from backend.ml.constants import FREQS
+from ml.crlb import calculate_crlb_rms
+from ml.constants import FREQS
 
 def test_calculate_crlb_rms():
     spacings = [0.1, 0.1, 0.1]

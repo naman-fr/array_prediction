@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from backend.ml.constants import C, FREQS, MAX_SPACING, DEFAULT_SNR_DB
+from ml.constants import C, FREQS, MAX_SPACING, DEFAULT_SNR_DB
 
 def wrap_to_2pi(angle):
     """Wrap an angle (in radians) into [0, 2pi)."""

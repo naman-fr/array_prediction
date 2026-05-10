@@ -2,9 +2,9 @@ import re
 import logging
 from typing import Callable, Dict, Any
 
-from backend.ml.inference import predict_spacings, verify_spacings
-from backend.db.database import SessionLocal
-from backend.db.models import ChatSession
+from ml.inference import predict_spacings, verify_spacings
+from db.database import SessionLocal
+from db.models import ChatSession
 
 logger = logging.getLogger("sentinel-agent")
 

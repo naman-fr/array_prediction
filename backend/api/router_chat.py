@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 import logging
 
-from backend.agent import parse_and_execute_intent
+from agent import parse_and_execute_intent
 
 logger = logging.getLogger("sentinel-router-chat")
 

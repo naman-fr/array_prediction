@@ -1,5 +1,5 @@
 import numpy as np
-from backend.ml.constants import C, FREQS
+from ml.constants import C, FREQS
 
 def calculate_array_factor(spacings, num_points=361):
     """

@@ -4,9 +4,9 @@ from typing import List, Optional
 import time
 import logging
 
-from backend.ml.inference import predict_spacings, verify_spacings, MODEL_PATH
-from backend.ml.dataset import generate_synthetic_dataset
-from backend.ml.model import train_model
+from ml.inference import predict_spacings, verify_spacings, MODEL_PATH
+from ml.dataset import generate_synthetic_dataset
+from ml.model import train_model
 
 logger = logging.getLogger("sentinel-router-ml")
 

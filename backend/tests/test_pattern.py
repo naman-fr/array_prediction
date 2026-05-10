@@ -1,5 +1,5 @@
 import numpy as np
-from backend.ml.pattern import calculate_array_factor
+from ml.pattern import calculate_array_factor
 
 def test_calculate_array_factor():
     spacings = [0.1, 0.1, 0.1]

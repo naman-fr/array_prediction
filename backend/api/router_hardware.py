@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List
 import logging
 
-from backend.hil_mock import deploy_to_hardware
+from hil_mock import deploy_to_hardware
 
 logger = logging.getLogger("sentinel-router-hardware")
 

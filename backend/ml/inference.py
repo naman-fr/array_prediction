@@ -1,10 +1,10 @@
 import os
 import numpy as np
-from backend.ml.constants import MAX_SPACING, FREQS, DEFAULT_SNR_DB
-from backend.ml.model import load_model, train_model
-from backend.ml.dataset import generate_synthetic_dataset, simulate_rms_error
-from backend.ml.crlb import calculate_crlb_rms
-from backend.ml.pattern import calculate_array_factor
+from ml.constants import MAX_SPACING, FREQS, DEFAULT_SNR_DB
+from ml.model import load_model, train_model
+from ml.dataset import generate_synthetic_dataset, simulate_rms_error
+from ml.crlb import calculate_crlb_rms
+from ml.pattern import calculate_array_factor
 import logging
 
 logger = logging.getLogger("sentinel-ml-inference")
