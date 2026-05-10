@@ -1,130 +1,70 @@
-# Radar Array Spacing Predictor 🛰️
+# Sentinel AI: Radar Array Spacing Predictor 🛰️
 
-A machine learning-based tool for optimizing element spacing in 4-element radar arrays to achieve target angular accuracy.
-
-![Radar Array Visualization](docs/radar-visualization.png)
+A production-grade, Agentic AI platform for optimizing element spacing in 4-element radar arrays to achieve target angular accuracy.
 
 ## 🌟 Features
 
-- **ML-Based Spacing Prediction**: Neural network model predicts optimal element spacings for target RMS angular error
-- **Multi-Frequency CRT Unwrapping**: Robust phase unwrapping using Chinese Remainder Theorem
-- **Interactive 3D Visualization**: Real-time visualization of array geometry and radiation patterns
-- **FastAPI Backend**: High-performance API for predictions and model management
-- **Next.js Frontend**: Modern, responsive UI with real-time updates
+- **Agentic AI Interface**: Natural language configuration via our embedded conversational assistant.
+- **Deep Learning Model**: High-performance multi-layer perceptron mapping target RMS angular error to optimal array spacings.
+- **Robust Physics Engine**: Multi-frequency CRT Unwrapping for resolving phase ambiguities.
+- **Microservice Backend**: Scalable FastAPI service exposing endpoints for prediction, simulation, and conversational logic.
+- **Next.js & Three.js Frontend**: Immersive, glassmorphism-styled dashboard with real-time 3D array visualizations.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.7+
-- Node.js 14+
-- npm or yarn
+- Python 3.8+
+- Node.js 18+
 
-### Installation
+### Setup the AI Backend
 
-1. Clone the repository:
-```bash
-git clone https://github.com/naman-fr/array_prediction.git
-cd array_prediction
-```
-
-2. Set up the backend:
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
+# Activate venv:
+# Windows: venv\Scripts\activate
+# Unix: source venv/bin/activate
+
 pip install -r requirements.txt
-```
-
-3. Set up the frontend:
-```bash
-cd ../frontend
-npm install
-```
-
-### Running the Application
-
-1. Start the backend server:
-```bash
-cd backend
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
 uvicorn main:app --reload
 ```
+The backend will run on `http://localhost:8000`.
 
-2. In a new terminal, start the frontend:
+### Setup the Next.js Frontend
+
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
+Open `http://localhost:3000` in your browser to interact with the Sentinel AI dashboard.
 
-3. Open your browser and navigate to `http://localhost:3000`
+## 🧠 Architecture
 
-## 📊 Technical Details
+### `backend/`
+- `ml/dataset.py`: Physics simulation and dataset generator.
+- `ml/model.py`: MLP Keras model architecture and training loops.
+- `ml/inference.py`: Model inference wrapper with CRT boundary enforcement.
+- `agent.py`: Conversational logic layer parsing natural language to model endpoints.
+- `main.py`: FastAPI server.
 
-### Backend Architecture
-
-- **FastAPI**: High-performance API framework
-- **TensorFlow**: ML model for spacing prediction
-- **NumPy/SciPy**: Scientific computing and optimization
-- **CRT Algorithm**: Multi-frequency phase unwrapping
-
-### Frontend Architecture
-
-- **Next.js**: React framework with SSR
-- **Three.js**: 3D visualization
-- **Tailwind CSS**: Styling
-- **TypeScript**: Type-safe development
-
-### ML Model
-
-- **Architecture**: Multi-layer perceptron (MLP)
-- **Input**: Target RMS angular error
-- **Output**: Optimal element spacings [d1, d2, d3]
-- **Training**: Synthetic dataset with realistic phase noise
-
-## 📝 API Documentation
-
-### Endpoints
-
-- `POST /predict`: Get optimal spacings for target error
-- `GET /model/info`: Get model metadata
-- `POST /verify`: Verify achieved error for given spacings
-
-### Example Request
-
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/predict",
-    json={"target_error": 0.1}  # degrees
-)
-spacings = response.json()["spacings"]
-```
+### `frontend/`
+- Next.js 14 App Router
+- React Three Fiber for 3D visualizations
+- Tailwind CSS with custom glassmorphism tokens
+- Lucide React for consistent iconography
 
 ## 🎯 Use Cases
 
-1. **Radar Array Design**: Optimize element spacing for desired angular accuracy
-2. **Educational Tool**: Learn about array design and phase unwrapping
-3. **Research**: Study the relationship between spacing and angular accuracy
+1. **Defense & Aerospace**: Rapidly prototype radar array geometries.
+2. **Research**: Analyze CRT unwrapping and boundary constraints.
+3. **Education**: Interactive learning of phase arrays and machine learning integrations.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome. Please ensure your commits follow conventional commit formats.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👨‍💻 Author
-
-- **Naman** - [GitHub](https://github.com/naman-fr)
-
-## 🙏 Acknowledgments
-
-- TensorFlow team for the ML framework
-- FastAPI for the backend framework
-- Three.js for 3D visualization
-- Next.js team for the frontend framework 
+MIT License
