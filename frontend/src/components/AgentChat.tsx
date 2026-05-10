@@ -15,10 +15,17 @@ interface AgentChatProps {
 
 export default function AgentChat({ onResultsUpdate }: AgentChatProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'agent', content: 'Agent: I can help you design radar arrays. Please specify a target RMS error, like "Design an array with 0.15 degrees error".' }
+    { role: 'agent', content: 'Hello! I am Sentinel AI. How can I help you design your radar array today? You can say things like "Design an array with 0.15 degrees error" or "Reduce the error by 0.05".' }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
+
+  useEffect(() => {
+    // Generate a unique session ID for stateful agentic memory
+    setSessionId(Math.random().toString(36).substring(2, 15));
+  }, []);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -40,7 +47,8 @@ export default function AgentChat({ onResultsUpdate }: AgentChatProps) {
 
     try {
       const response = await axios.post('http://localhost:8000/chat', {
-        message: userMessage
+        message: userMessage,
+        session_id: sessionId
       });
       
       setMessages(prev => [...prev, { role: 'agent', content: response.data.reply }]);

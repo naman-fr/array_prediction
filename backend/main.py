@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 from typing import List, Optional
 import logging
@@ -27,6 +28,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Instrument the app for Prometheus metrics
+Instrumentator().instrument(app).expose(app)
 
 class PredictRequest(BaseModel):
     target_error: float
@@ -58,6 +62,7 @@ class RetrainRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+    session_id: Optional[str] = "default"
 
 class ChatResponse(BaseModel):
     reply: str
@@ -118,9 +123,9 @@ def retrain_model(request: RetrainRequest, background_tasks: BackgroundTasks):
 
 @app.post("/chat", response_model=ChatResponse)
 def chat_agent(request: ChatRequest):
-    logger.info("Received chat request")
+    logger.info(f"Received chat request from session {request.session_id}")
     try:
-        result = parse_and_execute_intent(request.message)
+        result = parse_and_execute_intent(request.message, request.session_id)
         logger.info("Chat request processed successfully")
         return result
     except Exception as e:
