@@ -2,7 +2,18 @@
 
 import React, { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid, Sphere, Cylinder, Text, Html } from '@react-three/drei';
+import { 
+  OrbitControls, 
+  PerspectiveCamera, 
+  Html, 
+  Grid, 
+  ContactShadows, 
+  Environment,
+  Float,
+  Text,
+  Cylinder,
+  Sphere
+} from '@react-three/drei';
 import * as THREE from 'three';
 
 interface RadarVisualizationProps {
@@ -13,113 +24,127 @@ const AntennaElement = ({ position, index, actualPos }: { position: [number, num
   const meshRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   
-  useFrame((state) => {
-    if (meshRef.current) {
-      // Subtle hovering animation
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2 + index) * 0.05;
-    }
-  });
-
   return (
-    <group position={position} ref={meshRef}>
-      {/* Base */}
-      <Cylinder 
-        args={[0.1, 0.1, 0.5, 16]} 
-        position={[0, 0.25, 0]}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <meshStandardMaterial color={hovered ? "#60a5fa" : "#3b82f6"} metalness={0.8} roughness={0.2} />
-      </Cylinder>
-      {/* Top sphere (sensor) */}
-      <Sphere args={[0.15, 32, 32]} position={[0, 0.55, 0]}>
-        <meshStandardMaterial color={hovered ? "#ffffff" : "#60a5fa"} emissive="#3b82f6" emissiveIntensity={hovered ? 1 : 0.5} />
-      </Sphere>
+    <group 
+      position={position} 
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+    >
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+        <Cylinder args={[0.08, 0.08, 0.6, 32]}>
+          <meshStandardMaterial 
+            color={hovered ? "#60a5fa" : "#3b82f6"} 
+            emissive={hovered ? "#3b82f6" : "#1d4ed8"}
+            emissiveIntensity={0.5}
+            roughness={0.2}
+            metalness={0.8}
+          />
+        </Cylinder>
+      </Float>
       
-      {/* HTML 3D Tooltip */}
+      {/* Label */}
+      <Text
+        position={[0, 0.6, 0]}
+        fontSize={0.15}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {`A${index + 1}`}
+      </Text>
+
+      {/* 3D Tooltip */}
       {hovered && (
-        <Html position={[0, 1.2, 0]} center>
-          <div className="bg-slate-900/90 text-white px-3 py-2 rounded-lg border border-blue-500/50 shadow-xl backdrop-blur-md whitespace-nowrap text-xs pointer-events-none z-50">
-            <div className="font-bold text-blue-400 mb-1">Element {index + 1}</div>
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-400">Phase Center ($d_n$):</span>
-              <span className="font-mono text-blue-200">{actualPos.toFixed(4)}m</span>
+        <Html distanceFactor={10} position={[0, 1, 0]}>
+          <div className="bg-slate-900/90 backdrop-blur-md border border-blue-500/50 p-3 rounded-lg shadow-2xl min-w-[140px] pointer-events-none animate-in zoom-in-95 duration-200">
+            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Antenna Element {index + 1}</p>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 text-[10px]">Position X:</span>
+              <span className="text-white font-mono text-xs font-bold">{actualPos.toFixed(4)}m</span>
             </div>
-            <div className="flex justify-between gap-4 mt-0.5">
-              <span className="text-slate-400">Local Field:</span>
-              <span className="font-mono text-green-300 text-[10px]">Nominal</span>
+            <div className="mt-1 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+               <div className="h-full bg-blue-500" style={{ width: `${(actualPos/1.0)*100}%` }}></div>
             </div>
           </div>
         </Html>
       )}
-      
-      {/* Label */}
-      <Text position={[0, 0.8, 0]} fontSize={0.2} color={hovered ? "white" : "#94a3b8"} anchorX="center" anchorY="middle">
-        {`Antenna ${index + 1}`}
-      </Text>
-      <Text position={[0, -0.2, 0]} fontSize={0.15} color="#cbd5e1" anchorX="center" anchorY="middle">
-        {`${actualPos.toFixed(2)}m`}
-      </Text>
     </group>
   );
 };
 
-export default function RadarVisualization({ positions }: RadarVisualizationProps) {
-  // Center the array visualization around 0
-  const totalLength = positions.length > 0 ? positions[positions.length - 1] : 0;
-  const offsetX = -totalLength / 2;
-
+const Radome = () => {
   return (
-    <div className="w-full h-[400px] md:h-[500px] glass-panel rounded-xl overflow-hidden relative">
-      <div className="absolute top-4 left-4 z-10 bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700/50 backdrop-blur-md">
-        <span className="text-xs font-semibold tracking-wider text-blue-300 uppercase">Interactive 3D Array</span>
-      </div>
-      <Canvas camera={{ position: [0, 3, 5], fov: 45 }}>
-        <color attach="background" args={['#0f172a']} />
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
-        <pointLight position={[-10, -10, -5]} intensity={0.5} color="#9333ea" />
-        
-        <Environment preset="city" />
-        
-        {/* Baseline structure */}
-        {positions.length > 0 && (
-          <Cylinder 
-            args={[0.02, 0.02, totalLength + 0.4, 16]} 
-            position={[0, 0, 0]} 
-            rotation={[0, 0, Math.PI / 2]}
-          >
-            <meshStandardMaterial color="#475569" metalness={0.9} roughness={0.1} />
-          </Cylinder>
-        )}
+    <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0]}>
+      <Sphere args={[2.5, 64, 64]} >
+        <meshPhysicalMaterial 
+          color="#3b82f6"
+          transmission={0.95}
+          thickness={0.5}
+          roughness={0.05}
+          envMapIntensity={1}
+          transparent
+          opacity={0.08}
+          metalness={0}
+        />
+      </Sphere>
+    </mesh>
+  );
+};
 
-        {positions.map((pos, i) => (
-          <AntennaElement key={i} position={[pos + offsetX, 0, 0]} index={i} actualPos={pos} />
-        ))}
+const ArrayElements = ({ positions }: { positions: number[] }) => {
+  if (!positions || positions.length === 0) return null;
+  return (
+    <>
+      {positions.map((pos, i) => (
+        <AntennaElement key={i} index={i} position={[pos, 0, 0]} actualPos={pos} />
+      ))}
+    </>
+  );
+};
+
+export default function RadarVisualization({ positions }: RadarVisualizationProps) {
+  return (
+    <div className="w-full h-[450px] cursor-grab active:cursor-grabbing">
+      <Canvas shadows>
+        <PerspectiveCamera makeDefault position={[5, 3, 8]} />
+        <OrbitControls 
+          enablePan={false} 
+          minDistance={3} 
+          maxDistance={15}
+          maxPolarAngle={Math.PI / 2.1}
+          autoRotate={!positions || positions.length === 0}
+          autoRotateSpeed={0.5}
+        />
         
-        {/* Radome (Digital Twin Protective Dome) */}
-        {positions.length > 0 && (
-          <mesh position={[0, 0.3, 0]}>
-            <capsuleGeometry args={[totalLength / 2 + 0.5, totalLength, 32, 32]} />
-            <meshPhysicalMaterial 
-              color="#ffffff" 
-              transparent={true} 
-              opacity={0.05} 
-              roughness={0.1} 
-              transmission={0.9} 
-              thickness={0.1}
-            />
-          </mesh>
-        )}
-        
+        {/* Advanced Lighting & Environment */}
+        <ambientLight intensity={0.5} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} castShadow />
+        <pointLight position={[-10, -10, -10]} intensity={1} color="#3b82f6" />
+        <Environment preset="city" />
+
+        <group position={[-1.5, 0, 0]}>
+          <ArrayElements positions={positions} />
+          <Radome />
+        </group>
+
+        {/* Visual Ground Plane */}
         <Grid 
           infiniteGrid 
-          fadeDistance={20} 
+          fadeDistance={30} 
+          fadeStrength={5} 
+          cellSize={0.5} 
+          sectionSize={2.5} 
           sectionColor="#3b82f6" 
-          cellColor="#1e293b" 
-          position={[0, -0.5, 0]} 
+          cellColor="#1e293b"
+          position={[0, -0.3, 0]}
         />
-        <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
+        <ContactShadows 
+          position={[0, -0.3, 0]} 
+          opacity={0.4} 
+          scale={20} 
+          blur={2} 
+          far={4.5} 
+        />
       </Canvas>
     </div>
   );

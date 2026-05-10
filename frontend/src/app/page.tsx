@@ -1,119 +1,63 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import RadarVisualization from '@/components/RadarVisualization';
-import ControlPanel from '@/components/ControlPanel';
-import AgentChat from '@/components/AgentChat';
-import { Network, Globe, AlertCircle } from 'lucide-react';
-import api from '@/lib/api';
+import React from 'react';
+import Link from 'next/link';
+import { Network, ArrowRight, Shield, Zap, Target } from 'lucide-react';
 
-export default function Home() {
-  const [positions, setPositions] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [spacings, setSpacings] = useState<number[]>([]);
-  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-
-  useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        await api.get('/health');
-        setBackendStatus('online');
-      } catch (e) {
-        setBackendStatus('offline');
-      }
-    };
-    checkHealth();
-    const interval = setInterval(checkHealth, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleResults = (data: any) => {
-    setPositions(data.positions);
-    setSpacings(data.spacings);
-  };
-
+export default function LandingPage() {
   return (
-    <main className="min-h-screen p-4 md:p-8 lg:p-12 relative z-10">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Header */}
-        <header className="glass-panel p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg">
-              <Network className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                Sentinel AI
-              </h1>
-              <p className="text-slate-400 font-medium tracking-wide">Radar Array Optimization Platform</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {backendStatus === 'online' ? (
-              <div className="px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-semibold tracking-wider flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                BACKEND ONLINE
-              </div>
-            ) : backendStatus === 'offline' ? (
-              <div className="px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-semibold tracking-wider flex items-center gap-2 animate-pulse">
-                <AlertCircle className="w-4 h-4" />
-                BACKEND OFFLINE
-              </div>
-            ) : (
-              <div className="px-4 py-2 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-400 text-sm font-semibold tracking-wider">
-                CHECKING SYSTEM...
-              </div>
-            )}
-          </div>
-        </header>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Column: Controls */}
-          <div className="lg:col-span-4 space-y-8">
-            <ControlPanel 
-              onResults={handleResults} 
-              isLoading={isLoading} 
-              setIsLoading={setIsLoading} 
-            />
-
-            {/* Results Details */}
-            {spacings.length > 0 && (
-              <div className="glass-panel p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-white/10 pb-2">Optimized Elements</h3>
-                <ul className="space-y-3">
-                  {spacings.map((s, i) => (
-                    <li key={i} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
-                      <span className="text-slate-400 text-sm">Spacing d{i+1}</span>
-                      <span className="font-mono text-blue-300 font-semibold">{s.toFixed(5)} m</span>
-                    </li>
-                  ))}
-                  <li className="flex justify-between items-center bg-blue-900/20 p-3 rounded-lg border border-blue-500/30 mt-4">
-                    <span className="text-blue-200 font-medium">Total Aperture</span>
-                    <span className="font-mono text-white font-bold">
-                      {positions[positions.length - 1]?.toFixed(5)} m
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column: Visualization */}
-          <div className="lg:col-span-8 flex flex-col gap-8">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-              <RadarVisualization positions={positions} />
-            </div>
-
-            {/* Agentic Chat Area */}
-            <AgentChat onResultsUpdate={handleResults} />
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center space-y-12">
+      
+      {/* Hero Section */}
+      <div className="space-y-6 max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <div className="flex justify-center">
+          <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-5 rounded-3xl shadow-2xl shadow-blue-500/20 mb-4">
+            <Network className="w-12 h-12 text-white" />
           </div>
         </div>
         
+        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white">
+          The Future of <br/>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+            Radar Intelligence
+          </span>
+        </h1>
+        
+        <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          Sentinel AI leverages Agentic ReAct reasoning and Deep Learning to optimize 
+          multi-frequency radar arrays for elite aerospace performance.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+          <Link href="/dashboard" className="glass-button px-8 py-4 rounded-2xl font-bold text-lg flex items-center gap-2 group">
+            Launch Control Dashboard
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <Link href="/docs" className="px-8 py-4 rounded-2xl font-bold text-lg border border-white/10 hover:bg-white/5 transition-colors">
+            Read Whitepaper
+          </Link>
+        </div>
       </div>
-    </main>
+
+      {/* Feature Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full pt-12 animate-in fade-in duration-1000 delay-300">
+        {[
+          { title: 'Digital Twin', desc: 'Real-time 3D simulation with radome interference modeling.', icon: Shield },
+          { title: 'MLOps Pipeline', desc: 'Automatic retraining loops for adaptive SNR environments.', icon: Zap },
+          { title: 'ReAct Agent', desc: 'Natural language control for complex physical parameters.', icon: Target },
+        ].map((feature, i) => (
+          <div key={i} className="glass-panel p-8 text-left border-white/5 hover:border-blue-500/20 transition-all">
+            <feature.icon className="w-8 h-8 text-blue-400 mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer Decoration */}
+      <div className="text-slate-600 text-xs font-mono uppercase tracking-[0.5em] pt-12">
+        Powered by Hierarchical CRT Unwrapping
+      </div>
+    </div>
   );
 }
