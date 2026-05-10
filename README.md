@@ -4,11 +4,12 @@ A production-grade, Agentic AI platform for optimizing element spacing in 4-elem
 
 ## 🌟 Features
 
-- **Agentic AI Interface**: Natural language configuration via our embedded conversational assistant.
+- **ReAct Agentic AI Interface**: Advanced reasoning-based conversational assistant with modular tool-calling and stateful session memory.
 - **Deep Learning Model**: High-performance multi-layer perceptron mapping target RMS angular error to optimal array spacings.
-- **Robust Physics Engine**: Multi-frequency CRT Unwrapping for resolving phase ambiguities.
-- **Microservice Backend**: Scalable FastAPI service exposing endpoints for prediction, simulation, and conversational logic.
-- **Next.js & Three.js Frontend**: Immersive, glassmorphism-styled dashboard with real-time 3D array visualizations.
+- **Robust Physics Engine**: Multi-frequency Hierarchical Robust CRT Unwrapping and CRLB (Cramer-Rao Lower Bound) theoretical benchmarking.
+- **Digital Twin 3D Dashboard**: Immersive Next.js & Three.js interface with interactive 3D tooltips, radome rendering, and real-time radiation pattern (Array Factor) plotting.
+- **MLOps & Observability**: Asynchronous background retraining pipeline and integrated Prometheus metrics for real-time monitoring.
+- **Enterprise Architecture**: Domain-driven FastAPI routers and SQLAlchemy-backed SQLite persistence for conversational state.
 
 ## 🚀 Quick Start
 
@@ -55,11 +56,14 @@ pytest tests/
 ## 🧠 Architecture
 
 ### `backend/`
-- `ml/dataset.py`: Physics simulation and dataset generator.
-- `ml/model.py`: MLP Keras model architecture and training loops.
-- `ml/inference.py`: Model inference wrapper with CRT boundary enforcement.
-- `agent.py`: Conversational logic layer parsing natural language to model endpoints.
-- `main.py`: FastAPI server.
+- `api/`: Domain-driven routers for ML, Chat, and Hardware (HIL).
+- `db/`: Persistence layer using SQLAlchemy and SQLite.
+- `ml/`: Core physics simulation, model training, and pattern analysis.
+- `ml/pattern.py`: Array Factor (Radiation Pattern) computation.
+- `ml/crlb.py`: Cramer-Rao Lower Bound analytical benchmarking.
+- `agent.py`: ReAct-based agent executor with tool-calling registry.
+- `main.py`: FastAPI server entry point with Prometheus instrumentation.
+- `hil_mock.py`: Hardware-in-the-loop mock service for SCPI deployment.
 
 ### `frontend/`
 - Next.js 14 App Router
